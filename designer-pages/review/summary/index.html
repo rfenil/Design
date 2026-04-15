@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/fyle-icon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fylon – Australian Tax Return</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+(function () {
+  var route = "/review/summary";
+  var verified = true;
+  var user = {"id":101,"email":"designer-client@fyle.au","username":"designer_client","role":"client"};
+  var authPersist = {
+    state: {
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        onboarding_complete: true,
+        id_verified: verified
+      },
+      isAuthenticated: true,
+      isVerified: verified,
+      onboardingComplete: true
+    },
+    version: 0
+  };
+  localStorage.setItem("fyle-auth", JSON.stringify(authPersist));
+  localStorage.setItem("taxYear", "2024-25");
+  history.replaceState({}, "", route);
+
+  function mockPayload(url) {
+    if (url.indexOf("/estimate/summary") >= 0) {
+      return { message: "ok", data: { tax_year: "2024-25", line_items: [], benchmark_alerts: [], total_income: 82000, estimated_refund: 1284, is_refund: true } };
+    }
+    if (url.indexOf("/estimate/lodgement-checkpoint") >= 0) {
+      return { message: "ok", data: { verified_name: "Fenil Patel", payment_completed: true, ato_handover_completed: true, package_type: "standard", price: 149, stripe_enabled: false } };
+    }
+    if (url.indexOf("/estimate/payment/stripe/config") >= 0) {
+      return { message: "ok", data: { enabled: false } };
+    }
+    if (url.indexOf("/auth/refresh") >= 0) {
+      return {
+        access_token: "designer-token",
+        token_type: "bearer",
+        user_id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        onboarding_complete: true,
+        id_verified: verified
+      };
+    }
+    if (url.indexOf("/onboarding/id-verification/stripe/config") >= 0) {
+      return { message: "ok", data: { enabled: false, publishable_key: null } };
+    }
+    if (url.indexOf("/returns") >= 0) {
+      return { message: "ok", data: [] };
+    }
+    return { message: "ok", data: {} };
+  }
+
+  var OriginalXHR = window.XMLHttpRequest;
+  function MockXHR() {
+    this.readyState = 0;
+    this.status = 0;
+    this.responseText = "";
+    this.response = "";
+    this.onreadystatechange = null;
+    this.onload = null;
+    this.onerror = null;
+    this._method = "GET";
+    this._url = "";
+    this._headers = {};
+    this.timeout = 0;
+  }
+  MockXHR.prototype.open = function (method, url) {
+    this._method = method;
+    this._url = url;
+    this.readyState = 1;
+  };
+  MockXHR.prototype.setRequestHeader = function (k, v) {
+    this._headers[k] = v;
+  };
+  MockXHR.prototype.send = function () {
+    var self = this;
+    var url = String(self._url || "");
+    if (url.indexOf("/api/") >= 0) {
+      var body = mockPayload(url);
+      self.status = 200;
+      self.responseText = JSON.stringify(body);
+      self.response = self.responseText;
+      self.readyState = 4;
+      setTimeout(function () {
+        if (typeof self.onreadystatechange === "function") self.onreadystatechange();
+        if (typeof self.onload === "function") self.onload();
+      }, 5);
+      return;
+    }
+    var real = new OriginalXHR();
+    real.onreadystatechange = function () {
+      self.readyState = real.readyState;
+      self.status = real.status;
+      self.responseText = real.responseText;
+      self.response = real.response;
+      if (typeof self.onreadystatechange === "function") self.onreadystatechange();
+    };
+    real.onload = function () {
+      if (typeof self.onload === "function") self.onload();
+    };
+    real.onerror = function () {
+      if (typeof self.onerror === "function") self.onerror();
+    };
+    real.open(self._method, self._url, true);
+    Object.keys(self._headers).forEach(function (k) { real.setRequestHeader(k, self._headers[k]); });
+    real.send();
+  };
+  MockXHR.prototype.abort = function () {};
+  MockXHR.prototype.getAllResponseHeaders = function () { return "content-type: application/json\r\n"; };
+  MockXHR.prototype.getResponseHeader = function (name) { return name && name.toLowerCase() === "content-type" ? "application/json" : null; };
+  window.XMLHttpRequest = MockXHR;
+})();
+</script>
+<script type="module" crossorigin src="../assets/index-DxK-3t1x.js"></script>
+    <link rel="stylesheet" crossorigin href="../assets/index-CSGkhlOX.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
