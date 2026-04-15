@@ -1,12 +1,12 @@
-name: Deploy designer-pages to GitHub Pages
+name: Deploy Designer Pages to GitHub Pages
 
 on:
   push:
     branches: ["main"]
+    paths:
+      - "docs/designer-pages/**"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
   contents: read
@@ -14,27 +14,26 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: "pages"
   cancel-in-progress: true
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Pages
+      - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload artifact
+      - name: Upload static site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: designer-pages
+          path: docs/designer-pages
 
       - name: Deploy to GitHub Pages
         id: deployment
